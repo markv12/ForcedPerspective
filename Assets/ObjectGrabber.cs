@@ -24,11 +24,11 @@ public class ObjectGrabber : MonoBehaviour {
                     hit.transform.SetParent(grabber, true);
                     currentObject = hit.transform;
                     Destroy(hit.rigidbody);
-                    currentObject.GetComponentInChildren<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    //currentObject.GetComponentInChildren<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
             } else {
                 currentObject.gameObject.AddComponent<Rigidbody>();
-                currentObject.GetComponentInChildren<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                //currentObject.GetComponentInChildren<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 currentObject.SetParent(null, true);
                 currentObject = null;
             }
@@ -37,17 +37,27 @@ public class ObjectGrabber : MonoBehaviour {
             RaycastHit hit;
             if (Physics.Raycast(mainTransform.position, mainTransform.forward, out hit, 1000, environmentMask.value)) {
                 float previousDistance = Vector3.Distance(grabber.position, mainTransform.position);
-                Vector3 newPostion = hit.point;
-                Vector3 relativePosition = newPostion - mainTransform.position;
-                relativePosition *= 0.6f;
-                newPostion = mainTransform.position + relativePosition;
+                Vector3 newPosition = hit.point;
 
-                float newDistance = Vector3.Distance(newPostion, mainTransform.position);
+                float newDistance = Vector3.Distance(newPosition, mainTransform.position);
                 float distanceChange = newDistance / previousDistance;
-                grabber.position = newPostion;
-                currentObject.localPosition *= distanceChange;
+                Vector3 newScale = currentObject.transform.localScale * distanceChange;
+
+                newPosition = mainTransform.position + ShortenByUnits(newPosition - mainTransform.position, newScale.x);
+
+                newDistance = Vector3.Distance(newPosition, mainTransform.position);
+                distanceChange = newDistance / previousDistance;
                 currentObject.transform.localScale *= distanceChange;
+
+                grabber.position = newPosition;
+                currentObject.localPosition *= distanceChange;
             }
         }
 	}
+
+    private static Vector3 ShortenByUnits(Vector3 vec, float units) {
+        Vector3 normalized = vec.normalized;
+        Vector3 subtractionVec = normalized * units;
+        return vec - subtractionVec;
+    }
 }
